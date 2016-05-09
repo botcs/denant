@@ -104,6 +104,7 @@ class dataSet:
         print '\tTRESHOLD:\t{}'.format(self.TRESHOLD)
         print '\tDENS RADIUS:\t{}'.format(self.DENSITY_RADIUS)
         print '\tRESOLUTION:\t{}'.format(dataSet.RESOLUTION)
+        np.erA
 
     def coarseErr(self):
         print "\nProblem: grid is too coarse, increment resolution!!"
@@ -157,7 +158,7 @@ class dataSet:
             yFrom = findNearest(axY, C[1])
             xTo = xFrom + densTens.shape[1]
             yTo = yFrom + densTens.shape[0]
-
+            np.
             try:
                 self.D[yFrom:yTo, xFrom:xTo] += densTens
             except ValueError:
@@ -224,19 +225,21 @@ def main():
     parser.add_argument(
         'inputs', nargs='+',
         default='in.txt',
-        #        type=argparse.FileType('r'),
+        metavar='',
         help='Input csv file(s)...',
     )
     parser.add_argument(
         '-r', '--radius', nargs='+',
         help='Rad(s) of density sphere(s) for corresponding input(s)...',
         type=int, default=[defRad],
+        metavar='',
         dest='rad'
     )
     parser.add_argument(
         '-t', '--treshold', nargs='+',
         help='Threshold sum of overlapping densities',
         type=int, default=[defThd],
+        metavar='',
         dest='thd'
     )
 
@@ -244,6 +247,7 @@ def main():
         '-R', '--resolution',
         help='spacing for SHORTEST axis (corresponding axes will be adjusted)',
         type=int, default=defRes,
+        metavar='',
         dest='res'
     )
 
