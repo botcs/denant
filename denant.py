@@ -1,23 +1,18 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import argparse
 import sys
 
+# OWN MODULES#
+import promptParser
+import Visualizer as v
+import globalFunctions
+
+
+findNearest = globalFunctions.findNearest
+dist = globalFunctions.dist
+
 np.set_printoptions(precision=2)
-
-
-def dist(p1, p2):
-    return np.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
-
-
-def findNearest(array, value):
-    idx = np.searchsorted(array, value, side="left")
-    if idx == len(array) or \
-       np.abs(value - array[idx - 1]) < np.abs(value - array[idx]):
-        return idx - 1
-    else:
-        return idx
 
 
 class dataSet:
@@ -38,7 +33,7 @@ class dataSet:
     # GLOBAL VARIABLES ###
     RESOLUTION = 0
     axY, axX = [], []
-    densTens = []
+    sampleTens = []
     DELTA = 0
     TotalPoints = 0
 
@@ -104,7 +99,6 @@ class dataSet:
         print '\tTRESHOLD:\t{}'.format(self.TRESHOLD)
         print '\tDENS RADIUS:\t{}'.format(self.DENSITY_RADIUS)
         print '\tRESOLUTION:\t{}'.format(dataSet.RESOLUTION)
-        np.erA
 
     def coarseErr(self):
         print "\nProblem: grid is too coarse, increment resolution!!"
@@ -126,15 +120,15 @@ class dataSet:
 
         mX, mY = np.meshgrid(side, side)
         try:
-            dataSet.densTens = np.vectorize(evalDens)(mX, mY)[1:-1, 1:-1]
+            dataSet.sampleTens = np.vectorize(evalDens)(mX, mY)[1:-1, 1:-1]
         except IndexError:
             self.coarseErr()
-        if np.count_nonzero(dataSet.densTens > 0) < 5:
+        if np.count_nonzero(dataSet.sampleTens > 0) < 5:
             self.coarseErr()
 
         print "Done"
 
-    def getDensity(self):
+    def getDensityTensor(self):
 
         print 'Calculating density tensor for ' + self.IN_FILE
         print 45 * '-'
@@ -143,12 +137,12 @@ class dataSet:
 
         axX = dataSet.axX
         axY = dataSet.axY
-        densTens = dataSet.densTens
+        ST = dataSet.sampleTens
         print 'Allocating memory, total: {} entries'.format(
             len(axX) * len(axY))
         self.D = np.zeros((len(axY), len(axX)), dtype=np.float)
         print "Calculating density tensor"
-        bar = StatusBar(len(self.pointList))
+        bar = v.StatusBar(len(self.pointList))
         for P in self.pointList:
             bar.incrementStatusBar()
             # top left coordinates ###
@@ -156,114 +150,29 @@ class dataSet:
                  P[1] - self.DENSITY_RADIUS)
             xFrom = findNearest(axX, C[0])
             yFrom = findNearest(axY, C[1])
-            xTo = xFrom + densTens.shape[1]
-            yTo = yFrom + densTens.shape[0]
-            np.
+            xTo = xFrom + ST.shape[1]
+            yTo = yFrom + ST.shape[0]
+
             try:
-                self.D[yFrom:yTo, xFrom:xTo] += densTens
+                self.D[yFrom:yTo, xFrom:xTo] += ST
             except ValueError:
                 self.coarseErr()
 
         return self.D
-
-
-class StatusBar:
-
-    def __init__(self, total, barLength=30):
-        self.total = total
-        self.curr = 0
-        self.percentage = 0
-        self.barLength = barLength
-
-    def barStr(self):
-        currBar = self.barLength * self.percentage / 100
-        return '[' + "=" * currBar + " " * (self.barLength - currBar) + ']'
-
-    def printStatusBar(self):
-        print("\r  " + self.barStr() + "  Done/Total (" +
-              str(self.curr) + '/' + str(self.total) + ")   " +
-              str(100 * self.curr / self.total) + "%     "),
-        sys.stdout.flush()
-        if(self.percentage == 100):
-            print '\n\tfinished\n'
-
-    def incrementStatusBar(self):
-        self.curr += 1
-        self.updateStatusBar()
-
-    def updateStatusBar(self):
-        currPercentage = self.curr * 100 / self.total
-        if(currPercentage > self.percentage):
-            self.percentage = currPercentage
-            self.printStatusBar()
-
-
-def treshHold(densTensor, limit):
-    return densTensor > limit
 
 # RUNNING CODE
 
 
 def main():
 
-    defRad = 1000
-    defThd = 1000
-    defRes = 300
-
-    parser = argparse.ArgumentParser(
-        description='''DENANT: Densitiy Analysis Tool for 3D
-        points overlap statistics''',
-        usage='''denant.py <input file(s)...> [OPTIONS] <args>''',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    )
-
-    parser.add_argument(
-        '-v', '--version',
-        action='version',
-        version='DenAnT BETA - botcs'
-    )
-    parser.add_argument(
-        'inputs', nargs='+',
-        default='in.txt',
-        metavar='',
-        help='Input csv file(s)...',
-    )
-    parser.add_argument(
-        '-r', '--radius', nargs='+',
-        help='Rad(s) of density sphere(s) for corresponding input(s)...',
-        type=int, default=[defRad],
-        metavar='',
-        dest='rad'
-    )
-    parser.add_argument(
-        '-t', '--treshold', nargs='+',
-        help='Threshold sum of overlapping densities',
-        type=int, default=[defThd],
-        metavar='',
-        dest='thd'
-    )
-
-    parser.add_argument(
-        '-R', '--resolution',
-        help='spacing for SHORTEST axis (corresponding axes will be adjusted)',
-        type=int, default=defRes,
-        metavar='',
-        dest='res'
-    )
-
-    args = parser.parse_args()
-
+    args = promptParser.args
     dataSet.RESOLUTION = args.res
+
     sets = []
-    if len(args.rad) < len(args.inputs):
-        args.rad.extend([defRad] * (len(args.inputs) - len(args.rad)))
 
-    if len(args.thd) < len(args.inputs):
-        args.thd.extend([defThd] * (len(args.inputs) - len(args.thd)))
-
+    print 'Starting process, total samples: {}'.format(len(args.inputs))
     for i in xrange(len(args.inputs)):
         ds = dataSet(args.rad[i], args.inputs[i], args.thd[i])
-
         ds.checkDimension()
         sets.append(ds)
 
@@ -272,17 +181,25 @@ def main():
 
     DMap = np.zeros((len(axY), len(axX)), dtype=np.float)
     for ds in sets:
-        DMap += ds.getDensity()
+        DMap += ds.getDensityTensor()
 
-    plt.figure(1)
-    plt.subplot(121)
-    plt.imshow(DMap, cmap=plt.cm.gray,
-               interpolation="none", extent=[axX[0], axX[-1], axY[-1], axY[0]])
-    plt.subplot(122)
-    plt.imshow(DMap > args.thd[0],
-               cmap=plt.cm.gray, interpolation="none",
-               extent=[axX[0], axX[-1], axX[-1], axY[0]])
-    plt.show()
+    figures = []
+    for i, ds in enumerate(sets):
+        figures.append(v.TensorReader(ds).getFigure(args.binn[i]))
+
+    print 'Processing output, interactive=[{}]'.format(args.interactive)
+
+    if args.interactive:
+        plt.show()
+    else:
+        for i, f in enumerate(figures):
+            ds = sets[i]
+            OUT_NAME = '{}-r{}-b{}-t{}.png'.format(ds.IN_FILE,
+                                                   ds.DENSITY_RADIUS,
+                                                   args.binn[i],
+                                                   ds.TRESHOLD)
+            print ('Saving file: ' + OUT_NAME)
+            f.savefig(OUT_NAME)
 
 
 if __name__ == "__main__":
