@@ -57,27 +57,36 @@ parser.add_argument(
 parser.add_argument(
     '-o', '--output', nargs=1,
     help='Specify output directory (relative path from call)',
-    metavar=''
-)
+    metavar='')
+
+parser.add_argument(
+    '-c', '--cartesian',
+    action='store_true',
+    help='''Takes the cartesian product of the given option set
+            and handles each productum as a sample.
+            Evaluates to TRUE by default if only one input is
+            specified with multiple options. If -c flag is not set
+            for multiple input files, then options will be applied
+            in respect of the input order, and will be extended by
+            default values if there are more inputs than corresponding
+            options''')
 
 args = parser.parse_args()
 
-
-if len(args.inputs) > 1:
+if len(args.inputs) == 1 or args.cartesian:
+    # make a Cartesian product of sample value pairs
+    I, R, T, B = [], [], [], []
+    for element in itertools.product(args.inputs, args.rad, args.thd, args.binn):
+        I.append(element[0])
+        R.append(element[1])
+        T.append(element[2])
+        B.append(element[3])
+        args.inputs, args.rad, args.thd, args.binn = I, R, T, B
+else:
     # extend default values for unspecified samples
     if len(args.rad) < len(args.inputs):
         args.rad.extend([defRad] * (len(args.inputs) - len(args.rad)))
     if len(args.thd) < len(args.inputs):
         args.thd.extend([defThd] * (len(args.inputs) - len(args.thd)))
-else:
-    # make a Cartesian product of sample value pairs
-    I, R, T, B = [], [], [], []
-    for element in itertools.product(args.rad, args.thd, args.binn):
-        I.append(args.inputs[0])
-        R.append(element[0])
-        T.append(element[1])
-        B.append(element[2])
-    args.inputs, args.rad, args.thd, args.binn = I, R, T, B
-
-if len(args.binn) < len(args.inputs):
-    args.binn.extend([defBin] * (len(args.inputs) - len(args.binn)))
+    if len(args.binn) < len(args.inputs):
+        args.binn.extend([defBin] * (len(args.inputs) - len(args.binn)))

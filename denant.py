@@ -16,7 +16,7 @@ dist = globalFunctions.dist
 np.set_printoptions(precision=2)
 
 
-class dataSet:
+class PointSet:
 
     def __init__(self, D, I, T):
         # METAPARAMETERS ###
@@ -42,9 +42,9 @@ class dataSet:
     def read2DPoints(self):
 
         self.pointList = self.IN[['X', 'Y']].values
-        dataSet.TotalPoints += len(self.pointList)
+        PointSet.TotalPoints += len(self.pointList)
         print "Reading {} point finished, total count: {}".format(
-            len(self.pointList), dataSet.TotalPoints)
+            len(self.pointList), PointSet.TotalPoints)
 
     def checkDimension(self):
         edge = self.DENSITY_RADIUS
@@ -57,10 +57,10 @@ class dataSet:
         )
 
     def extend2Dimensions(self, xMin, xMax, yMin, yMax):
-        axX = dataSet.axX
-        axY = dataSet.axY
+        axX = PointSet.axX
+        axY = PointSet.axY
 
-        if not (len(dataSet.axX) == 0 or len(dataSet.axY) == 0):
+        if not (len(PointSet.axX) == 0 or len(PointSet.axY) == 0):
             if (not (xMin < axX[0] or xMax > axX[-1] or
                      yMin < axY[0] or yMax > axY[-1])):
                 print 'No space extension needed'
@@ -78,19 +78,19 @@ class dataSet:
             yMax - yMin
         )
         if intervals[0] == min(intervals):
-            dataSet.DELTA = intervals[0] / float(dataSet.RESOLUTION)
+            PointSet.DELTA = intervals[0] / float(PointSet.RESOLUTION)
         elif intervals[1] == min(intervals):
-            dataSet.DELTA = intervals[1] / float(dataSet.RESOLUTION)
+            PointSet.DELTA = intervals[1] / float(PointSet.RESOLUTION)
 
         # 0.01 constant for arange skew
-        dataSet.axX = np.arange(xMin, xMax, dataSet.DELTA)
-        dataSet.axY = np.arange(yMin, yMax, dataSet.DELTA)
+        PointSet.axX = np.arange(xMin, xMax, PointSet.DELTA)
+        PointSet.axY = np.arange(yMin, yMax, PointSet.DELTA)
 
         print "Space expanded with new parameters:"
         print "X axis [start, end, length]:\n\t{}\t{}\t{}\t".format(
-            dataSet.axX[0], dataSet.axX[-1], len(dataSet.axX))
+            PointSet.axX[0], PointSet.axX[-1], len(PointSet.axX))
         print "Y axis [start, end, length]:\n\t{}\t{}\t{}\n\n".format(
-            dataSet.axY[0], dataSet.axY[-1], len(dataSet.axY))
+            PointSet.axY[0], PointSet.axY[-1], len(PointSet.axY))
 
     # STATUS MONITORING ###
     def printArgs(self):
@@ -98,7 +98,7 @@ class dataSet:
         print '\tOptions for this set:\t'
         print '\tTRESHOLD:\t{}'.format(self.TRESHOLD)
         print '\tDENS RADIUS:\t{}'.format(self.DENSITY_RADIUS)
-        print '\tRESOLUTION:\t{}'.format(dataSet.RESOLUTION)
+        print '\tRESOLUTION:\t{}'.format(PointSet.RESOLUTION)
 
     def coarseErr(self):
         print "\nProblem: grid is too coarse, increment resolution!!"
@@ -116,14 +116,14 @@ class dataSet:
             return max(self.dens(dist([x, y], [0, 0])), 0)
         # localMesh ##
         r = self.DENSITY_RADIUS
-        side = np.arange(-r, r, dataSet.DELTA)
+        side = np.arange(-r, r, PointSet.DELTA)
 
         mX, mY = np.meshgrid(side, side)
         try:
-            dataSet.sampleTens = np.vectorize(evalDens)(mX, mY)[1:-1, 1:-1]
+            PointSet.sampleTens = np.vectorize(evalDens)(mX, mY)[1:-1, 1:-1]
         except IndexError:
             self.coarseErr()
-        if np.count_nonzero(dataSet.sampleTens > 0) < 5:
+        if np.count_nonzero(PointSet.sampleTens > 0) < 5:
             self.coarseErr()
 
         print "Done"
@@ -134,9 +134,9 @@ class dataSet:
         self.setSampleDensity()
         self.read2DPoints()
 
-        axX = dataSet.axX
-        axY = dataSet.axY
-        ST = dataSet.sampleTens
+        axX = PointSet.axX
+        axY = PointSet.axY
+        ST = PointSet.sampleTens
         print 'Allocating memory, total: {} entries'.format(
             len(axX) * len(axY))
         self.D = np.zeros((len(axY), len(axX)), dtype=np.float)
@@ -165,7 +165,7 @@ class dataSet:
 def main():
 
     args = promptParser.args
-    dataSet.RESOLUTION = args.res
+    PointSet.RESOLUTION = args.res
 
     sets = []
 
@@ -173,12 +173,12 @@ def main():
         'Starting process, total samples: {}'.format(len(args.inputs)))
 
     for i in xrange(len(args.inputs)):
-        ds = dataSet(args.rad[i], args.inputs[i], args.thd[i])
+        ds = PointSet(args.rad[i], args.inputs[i], args.thd[i])
         ds.checkDimension()
         sets.append(ds)
 
-    axX = dataSet.axX
-    axY = dataSet.axY
+    axX = PointSet.axX
+    axY = PointSet.axY
 
     DMap = np.zeros((len(axY), len(axX)), dtype=np.float)
     for ds in sets:
