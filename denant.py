@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import sys
+import os
 
 # OWN MODULES#
 import promptParser
@@ -93,8 +94,7 @@ class dataSet:
 
     # STATUS MONITORING ###
     def printArgs(self):
-        print "\nReading in file:\t" + self.IN_FILE
-        print 45 * '-'
+        v.printHeader("\nReading in file:\t" + self.IN_FILE)
         print '\tOptions for this set:\t'
         print '\tTRESHOLD:\t{}'.format(self.TRESHOLD)
         print '\tDENS RADIUS:\t{}'.format(self.DENSITY_RADIUS)
@@ -130,8 +130,7 @@ class dataSet:
 
     def getDensityTensor(self):
 
-        print 'Calculating density tensor for ' + self.IN_FILE
-        print 45 * '-'
+        v.printHeader('Calculating density tensor for ' + self.IN_FILE)
         self.setSampleDensity()
         self.read2DPoints()
 
@@ -170,7 +169,9 @@ def main():
 
     sets = []
 
-    print 'Starting process, total samples: {}'.format(len(args.inputs))
+    v.printHeader(
+        'Starting process, total samples: {}'.format(len(args.inputs)))
+
     for i in xrange(len(args.inputs)):
         ds = dataSet(args.rad[i], args.inputs[i], args.thd[i])
         ds.checkDimension()
@@ -183,24 +184,28 @@ def main():
     for ds in sets:
         DMap += ds.getDensityTensor()
 
-    print 'Processing output, interactive=[{}]'.format(args.interactive)
+    v.printHeader('Rendering output...')
 
-    figures = []
+    if args.output is not None:
+        globalFunctions.ensure_dir(args.output[0])
+
     for i, ds in enumerate(sets):
-        figures.append(v.TensorReader(ds).getFigure(args.binn[i]))
 
-    if args.interactive:
-        plt.show()
-    else:
-        for i, f in enumerate(figures):
-            ds = sets[i]
-            OUT_NAME = '{}-r{}-b{}-t{}.png'.format(ds.IN_FILE,
-                                                   ds.DENSITY_RADIUS,
-                                                   args.binn[i],
-                                                   ds.TRESHOLD)
-            print ('Saving file: ' + OUT_NAME)
-            f.savefi(OUT_NAME)
+        head, tail = os.path.split(ds.IN_FILE)
+        tail, ext = os.path.splitext(tail)
+        if args.output is not None:
+            head = args.output[0]
 
+        OUT_FILE = os.path.normpath(head + '/' + tail)
+
+        OUT_NAME = '{}-r{}-b{}-t{}.png'.format(OUT_FILE,
+                                               ds.DENSITY_RADIUS,
+                                               args.binn[i],
+                                               ds.TRESHOLD)
+        print ('Saving file: ' + OUT_NAME)
+        v.TensorReader(ds).getFigure(args.binn[i]).savefig(OUT_NAME)
+
+    v.printHeader('\nSuccess!')
 
 if __name__ == "__main__":
     try:

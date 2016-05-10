@@ -55,12 +55,13 @@ parser.add_argument(
     dest='res')
 
 parser.add_argument(
-    '--interactive',
-    help='''turn this flag ON, to plot immediately
-            all possible plots in interactive mode''',
-    action='store_true')
+    '-o', '--output', nargs=1,
+    help='Specify output directory (relative path from call)',
+    metavar=''
+)
 
 args = parser.parse_args()
+
 
 if len(args.inputs) > 1:
     # extend default values for unspecified samples

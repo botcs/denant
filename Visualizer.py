@@ -5,6 +5,13 @@ import globalFunctions
 
 findNearest = globalFunctions.findNearest
 
+hBar = 45 * '-' + '\n'
+
+
+def printHeader(h):
+    print h
+    print hBar
+
 
 class StatusBar:
 
@@ -50,21 +57,20 @@ class TensorReader:
 
         f = plt.figure()
         f.suptitle(self.ds.IN_FILE, fontsize=14, fontweight='bold')
-        plt.title('AAAAAAAAAAAA' + self.ds.IN_FILE)
         plt.subplot(131)
-        plt.title('Density Map, radius: {}'.format(self.ds.DENSITY_RADIUS))
+        plt.title('Density Map\nradius: {}'.format(self.ds.DENSITY_RADIUS))
         plt.imshow(self.T, cmap=plt.cm.gray,
                    interpolation="none", extent=corners)
         plt.locator_params(nbins=4)
 
         plt.subplot(132)
-        plt.title('Binned Map, steps: {}'.format(nbins))
+        plt.title('Binned Map\nsteps: {}'.format(nbins))
         plt.imshow(self.getBinned(nbins), cmap=plt.cm.gray,
                    interpolation="none", extent=corners)
         plt.locator_params(nbins=4)
 
         plt.subplot(133)
-        plt.title('Thresholded Map: {}'.format(self.ds.TRESHOLD))
+        plt.title('Thresholded Map\nTreshold:{}'.format(self.ds.TRESHOLD))
         plt.imshow(self.T > self.ds.TRESHOLD, cmap=plt.cm.gray,
                    interpolation="none", extent=corners)
         plt.locator_params(nbins=4)

@@ -1,4 +1,16 @@
 import numpy as np
+import os
+
+
+def ensure_dir(f):
+
+    # correction of input (e.g. path/to/dir/  VS path/to/dir )#
+    f += '/'
+    d = os.path.dirname(f)
+    print 'Checking output path...'
+    if not os.path.exists(d):
+        print 'Making directory: {}'.format(d)
+        os.makedirs(d)
 
 
 def dist(p1, p2):
