@@ -183,11 +183,11 @@ def main():
     for ds in sets:
         DMap += ds.getDensityTensor()
 
+    print 'Processing output, interactive=[{}]'.format(args.interactive)
+
     figures = []
     for i, ds in enumerate(sets):
         figures.append(v.TensorReader(ds).getFigure(args.binn[i]))
-
-    print 'Processing output, interactive=[{}]'.format(args.interactive)
 
     if args.interactive:
         plt.show()
@@ -199,7 +199,7 @@ def main():
                                                    args.binn[i],
                                                    ds.TRESHOLD)
             print ('Saving file: ' + OUT_NAME)
-            f.savefig(OUT_NAME)
+            f.savefi(OUT_NAME)
 
 
 if __name__ == "__main__":
