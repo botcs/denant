@@ -55,7 +55,8 @@ class TensorReader:
         axY = self.ds.axY
         corners = [axX[0], axX[-1], axY[-1], axY[0]]
 
-        f = plt.figure()
+        plt.clf()
+        f = plt.figure(1)
         f.suptitle(self.ds.IN_FILE, fontsize=14, fontweight='bold')
         plt.subplot(131)
         plt.title('Density Map\nradius: {}'.format(self.ds.DENSITY_RADIUS))
