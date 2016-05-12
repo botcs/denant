@@ -14,7 +14,12 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument(
-    '-v', '--version',
+    '-v', '--verbose',
+    action='store_true',
+    help='Flag for printing detailed informations about process steps'
+)
+parser.add_argument(
+    '--version',
     action='version',
     version='DenAnT BETA - botcs'
 )
@@ -57,6 +62,7 @@ parser.add_argument(
 parser.add_argument(
     '-o', '--output', nargs=1,
     help='Specify output directory (relative path from call)',
+    default=['default_output'],
     metavar='')
 
 parser.add_argument(
@@ -76,7 +82,8 @@ args = parser.parse_args()
 if len(args.inputs) == 1 or args.cartesian:
     # make a Cartesian product of sample value pairs
     I, R, T, B = [], [], [], []
-    for element in itertools.product(args.inputs, args.rad, args.thd, args.binn):
+    for element in itertools.product(
+            args.inputs, args.rad, args.thd, args.binn):
         I.append(element[0])
         R.append(element[1])
         T.append(element[2])
