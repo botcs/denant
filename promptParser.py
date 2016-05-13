@@ -3,7 +3,7 @@ import itertools
 
 defRad = 1000
 defThd = 1000
-defRes = 300
+defRes = 50
 defBin = 3
 
 parser = argparse.ArgumentParser(

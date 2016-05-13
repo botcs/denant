@@ -48,37 +48,39 @@ class TensorReader:
 
     def __init__(self, dataset):
         self.ds = dataset
-        self.T = dataset.D
+        # visualize default: mean of values on axis Z
+        self.T = np.mean(self.ds.D, axis=2)
 
     def getFigure(self, nbins=3):
-        axX = self.ds.axX
-        axY = self.ds.axY
+        axX = self.ds.axes[0]
+        axY = self.ds.axes[1]
         corners = [axX[0], axX[-1], axY[-1], axY[0]]
 
         plt.clf()
         f = plt.figure(1)
         f.suptitle(self.ds.IN_FILE, fontsize=14, fontweight='bold')
-        plt.subplot(131)
+        plt.subplot(231)
         plt.title('Density Map\nradius: {}'.format(self.ds.DENSITY_RADIUS))
         plt.imshow(
             self.T, cmap=plt.cm.gray,
             interpolation="none", extent=corners)
         plt.locator_params(nbins=4)
 
-        plt.subplot(132)
+        plt.subplot(232)
         plt.title('Binned Map\nsteps: {}'.format(nbins))
         plt.imshow(
             self.getBinned(nbins), cmap=plt.cm.gray,
             interpolation="none", extent=corners)
         plt.locator_params(nbins=4)
 
-        plt.subplot(133)
-        plt.title('Thresholded Map\nTreshold:{}'.format(self.ds.TRESHOLD))
+'''
+        plt.subplot(233)
+        plt.title('Thresholded Map\nTreshold: {}'.format(self.ds.TRESHOLD))
         plt.imshow(
             self.T > self.ds.TRESHOLD, cmap=plt.cm.gray,
             interpolation="none", extent=corners)
         plt.locator_params(nbins=4)
-
+'''
         f.set_size_inches(18.5, 8)
         return f
 

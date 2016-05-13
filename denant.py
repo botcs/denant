@@ -25,19 +25,12 @@ def main():
         ds.checkDimension()
         sets.append(ds)
 
-    axX = dt.PointSet.axX
-    axY = dt.PointSet.axY
-
     v.printHeader('Calculating density tensors...')
     bar = v.StatusBar(len(sets))
     for ds in sets:
         ds.setDensityTensor()
         if not args.verbose:
             bar.incrementStatusBar()
-
-    DMap = np.zeros((len(axY), len(axX)), dtype=np.float)
-    for ds in sets:
-        DMap += ds.getDensityTensor()
 
     globalFunctions.ensure_dir(args.output[0])
 
