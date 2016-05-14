@@ -1,14 +1,16 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
-import globalFunctions
+import globalFunctions as gf
+import os
 
-findNearest = globalFunctions.findNearest
-
-hBar = 45 * '-' + '\n'
+findNearest = gf.findNearest
 
 
 def printHeader(h):
+
+    hBar = len(h) * '-'
+    print '\n' + hBar
     print h
     print hBar
 
@@ -25,23 +27,21 @@ class StatusBar:
         currBar = self.barLength * self.percentage / 100
         return '[' + "=" * currBar + " " * (self.barLength - currBar) + ']'
 
-    def printStatusBar(self):
-        print("\r  " + self.barStr() + "  Done/Total (" +
-              str(self.curr) + '/' + str(self.total) + ")   " +
-              str(100 * self.curr / self.total) + "%     "),
-        sys.stdout.flush()
-        if(self.percentage == 100):
-            print '\n\tfinished\n'
+    def printBar(self):
+        if(self.percentage <= 100):
+            print("\r  " + self.barStr() + "  Done/Total (" +
+                  str(self.curr) + '/' + str(self.total) + ")   " +
+                  str(100 * self.curr / self.total) + "%     "),
+            sys.stdout.flush()
+            if(self.percentage == 100):
+                print '\n'
 
-    def incrementStatusBar(self):
+    def update(self):
         self.curr += 1
-        self.updateStatusBar()
-
-    def updateStatusBar(self):
         currPercentage = self.curr * 100 / self.total
         if(currPercentage > self.percentage):
             self.percentage = currPercentage
-            self.printStatusBar()
+            self.printBar()
 
 
 class TensorReader:
@@ -51,45 +51,120 @@ class TensorReader:
         # visualize default: mean of values on axis Z
         self.T = np.mean(self.ds.D, axis=2)
 
-    def getFigure(self, nbins=3):
+    def savefig(self, output_dir, separated=None, bar=None):
+        head, tail = os.path.split(self.ds.IN_FILE)
+        tail, ext = os.path.splitext(tail)
+        OUT_PATH = os.path.normpath(output_dir + '/' + tail)
+
+        if separated:
+            separated_dir = '{}-radius{}-bin{}'.format(
+                OUT_PATH, self.ds.DENSITY_RADIUS, self.ds.BINSTEPS)
+            gf.ensure_dir(separated_dir)
+
+            for step in range(self.ds.BINSTEPS):
+                file_name = os.path.normpath(separated_dir + '/' + tail)
+                OUT_NAME = '{}-radius{}-step{}.png'.format(
+                    file_name, self.ds.DENSITY_RADIUS, step)
+                self.getSeparatedFigure(step).savefig(OUT_NAME)
+                gf.printVerbose('\t' + os.path.split(OUT_NAME)[1])
+                if bar:
+                    bar.update()
+
+        else:
+            OUT_NAME = '{}-radius{}-bin{}.png'.format(
+                OUT_PATH, self.ds.DENSITY_RADIUS, self.ds.BINSTEPS)
+
+            gf.printVerbose(OUT_NAME)
+
+            self.getSingleFigure(bar).savefig(OUT_NAME)
+
+    def getSeparatedFigure(self, step):
         axX = self.ds.axes[0]
         axY = self.ds.axes[1]
         corners = [axX[0], axX[-1], axY[-1], axY[0]]
+        vols = self.ds.getBinnedVolumes()
 
-        plt.clf()
-        f = plt.figure(1)
-        f.suptitle(self.ds.IN_FILE, fontsize=14, fontweight='bold')
-        plt.subplot(231)
-        plt.title('Density Map\nradius: {}'.format(self.ds.DENSITY_RADIUS))
-        plt.imshow(
-            self.T, cmap=plt.cm.gray,
-            interpolation="none", extent=corners)
-        plt.locator_params(nbins=4)
+        plt.close()
+        fig = plt.gcf()
+        fig.suptitle(self.ds.IN_FILE, fontsize=14, fontweight='bold')
 
-        plt.subplot(232)
-        plt.title('Binned Map\nsteps: {}'.format(nbins))
-        plt.imshow(
-            self.getBinned(nbins), cmap=plt.cm.gray,
-            interpolation="none", extent=corners)
-        plt.locator_params(nbins=4)
+        mainMap = plt.subplot(121)
+        mainMap.set_title('Density map,\nRadius: {}\nBinning steps: {}'.format(
+            self.ds.DENSITY_RADIUS, self.ds.BINSTEPS))
+        mainMap.imshow(
+            self.getBinned(self.ds.BINSTEPS), cmap=plt.cm.gray,
+            interpolation=None, extent=corners, aspect=1)
+        mainMap.locator_params(nbins=4)
 
-'''
-        plt.subplot(233)
-        plt.title('Thresholded Map\nTreshold: {}'.format(self.ds.TRESHOLD))
-        plt.imshow(
-            self.T > self.ds.TRESHOLD, cmap=plt.cm.gray,
-            interpolation="none", extent=corners)
-        plt.locator_params(nbins=4)
-'''
-        f.set_size_inches(18.5, 8)
-        return f
+        ax = plt.subplot(122)
+        title = 'Step: {}\nTreshold value: {}\nThresholded volume: {}'.format(
+            step, self.ds.binterval[step], vols[step])
+        ax.set_title(title)
+        ax.imshow(
+            self.T > self.binterval[step],
+            cmap=plt.cm.gray,
+            aspect=1,
+            interpolation='bicubic', extent=corners)
+        ax.locator_params(nbins=4)
+
+        fig.set_size_inches(10, 6)
+        plt.tight_layout()
+
+        return fig
+
+    def getSingleFigure(self, bar=None):
+        axX = self.ds.axes[0]
+        axY = self.ds.axes[1]
+        corners = [axX[0], axX[-1], axY[-1], axY[0]]
+        vols = self.ds.getBinnedVolumes()
+        colnum = 3
+        gridShape = [(self.ds.BINSTEPS / colnum) + 1, colnum]
+        if (self.ds.BINSTEPS) % colnum > 0:
+            gridShape[0] += 1
+
+        plt.close()
+        fig = plt.gcf()
+        fig.suptitle(self.ds.IN_FILE, fontsize=14, fontweight='bold')
+
+        mainMap = plt.subplot2grid(
+            gridShape, (0, colnum / 2))
+        mainMap.set_title('Density map,\nRadius: {}\nBinning steps: {}'.format(
+            self.ds.DENSITY_RADIUS, self.ds.BINSTEPS))
+        mainMap.imshow(
+            self.getBinned(self.ds.BINSTEPS), cmap=plt.cm.gray,
+            interpolation=None, extent=corners, aspect=1)
+        mainMap.locator_params(nbins=4)
+
+        plt.tight_layout()
+
+        for step in range(self.ds.BINSTEPS):
+            rowIndex = 1 + (step / colnum)
+            colIndex = (step % colnum)
+            # print '!!!!{}'.format(step)
+            # print gridShape
+            # print (rowIndex, colIndex)
+
+            ax = plt.subplot2grid(gridShape, (rowIndex, colIndex))
+            title = 'Step: {}\nTreshold value: {}\nThresholded volume: {}'.format(
+                step, self.ds.binterval[step], vols[step])
+
+            ax.set_title(title)
+            ax.imshow(
+                self.T > self.binterval[step],
+                cmap=plt.cm.gray,
+                aspect=1,
+                interpolation='bicubic', extent=corners)
+            ax.locator_params(nbins=4)
+            if bar:
+                bar.update()
+
+        fig.set_size_inches(colnum * 9, gridShape[0] * 8)
+        fig.set_dpi(110)
+        return fig
 
     def getBinned(self, steps):
-        maxVal = np.max(self.T)
-        minVal = np.min(self.T)
-        self.interval = np.linspace(minVal, maxVal + 0.001, steps)
-
-        def binVal(x):
-            return self.interval[findNearest(self.interval, x)]
-
-        return np.vectorize(binVal)(self.T)
+        self.binterval = gf.getBinterval(self.T, self.ds.BINSTEPS)
+        TSum = np.zeros(self.T.shape)
+        for b in self.binterval:
+            TSum += self.T > b
+        return TSum

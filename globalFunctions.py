@@ -13,17 +13,30 @@ def ensure_dir(f):
     # correction of input (e.g. path/to/dir/  VS path/to/dir )#
     f += '/'
 
-    print f
     d = os.path.dirname(f)
 
-    print 'Checking output path...  '
+    printVerbose('Checking output path...  ')
     if not os.path.exists(d):
-        print 'Making directory: {}'.format(d)
-        os.makedirs(d)
+        printVerbose('Making directory:\n\t{}'.format(d))
+        try:
+            os.makedirs(d)
+        except OSError as e:
+            print 'Cannot make directory ', e
+            exit('dirmake: permission denied')
     else:
-        print 'OK, Directory exists: {}'.format(d)
+        printVerbose('OK, Directory exists:\n\t{}'.format(d))
 
 norm = np.linalg.norm
+
+
+def getBinterval(T, steps):
+        maxVal = np.max(T)
+        minVal = np.min(T)
+        '''everything is truncated to the lowest value
+        so the max value is always yields zero measure
+        when tresholding'''
+
+        return np.linspace(minVal, maxVal + 0.001, steps + 1)[:-1]
 
 
 def dens(DENSITY_RADIUS, r):

@@ -44,13 +44,6 @@ parser.add_argument(
     metavar='',
     dest='rad'
 )
-parser.add_argument(
-    '-t', '--treshold', nargs='+',
-    help='Threshold sum of overlapping densities',
-    type=int, default=[defThd],
-    metavar='',
-    dest='thd'
-)
 
 parser.add_argument(
     '-R', '--resolution',
@@ -77,23 +70,26 @@ parser.add_argument(
             default values if there are more inputs than corresponding
             options''')
 
+parser.add_argument(
+    '-s', '--separated',
+    action='store_true',
+    help='Save output images into separate subfolders of output folder')
+
+
 args = parser.parse_args()
 
 if len(args.inputs) == 1 or args.cartesian:
     # make a Cartesian product of sample value pairs
-    I, R, T, B = [], [], [], []
-    for element in itertools.product(
-            args.inputs, args.rad, args.thd, args.binn):
+    I, R, B = [], [], []
+    for element in itertools.product(args.inputs, args.rad, args.binn):
         I.append(element[0])
         R.append(element[1])
-        T.append(element[2])
-        B.append(element[3])
-        args.inputs, args.rad, args.thd, args.binn = I, R, T, B
+        B.append(element[2])
+    args.inputs, args.rad, args.binn = I, R, B
 else:
     # extend default values for unspecified samples
     if len(args.rad) < len(args.inputs):
         args.rad.extend([defRad] * (len(args.inputs) - len(args.rad)))
-    if len(args.thd) < len(args.inputs):
-        args.thd.extend([defThd] * (len(args.inputs) - len(args.thd)))
+
     if len(args.binn) < len(args.inputs):
         args.binn.extend([defBin] * (len(args.inputs) - len(args.binn)))
