@@ -6,6 +6,8 @@ import promptParser
 import Visualizer as v
 import globalFunctions
 import denstensor as dt
+
+
 np.set_printoptions(precision=2)
 
 
