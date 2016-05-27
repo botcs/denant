@@ -1,13 +1,11 @@
 import numpy as np
 import pandas as pd
 
-import Visualizer as v
-import globalFunctions as gf
-import promptParser
+import tensorplot as v
+import globals
 
-findNearestIndex = gf.findNearest
-vprint = gf.printVerbose
-verbose = promptParser.args.verbose
+findNearestIndex = globals.findNearest
+vprint = globals.printVerbose
 
 
 class PointSet:
@@ -18,7 +16,7 @@ class PointSet:
         self.IN_FILE = I
         self.BINSTEPS = B
         self.binVols = []
-        if verbose:
+        if globals.verbose:
             v.printHeader('Reading in file:   ' + self.IN_FILE)
         try:
             self.IN = pd.read_csv(self.IN_FILE, delimiter='\t')
@@ -27,7 +25,7 @@ class PointSet:
             vprint('Skipping this set...')
             raise
 
-    # GLOBAL VARIABLES ###
+    'GLOBAL VARIABLES'
     RESOLUTION = 0
     axes = ([], [], [])
     bounds = ([], [], [])
@@ -42,16 +40,16 @@ class PointSet:
             len(self.pointList), PointSet.TotalPoints))
 
     def checkDimension(self):
-        # CHECKS GLOBAL DIMENSIONS FOR DATA SET
-        # one session handles every point, regarding the largest density sphere
-        # in an equally large space to be able to sum their densities if needed
+        ''' CHECKS GLOBAL DIMENSIONS FOR DATA SET
+         one session handles every point, regarding the largest density sphere
+        in an equally large space to be able to sum their densities if needed
 
-        # in other words the edges of the space are global for ALL
-        # IN ALL SETS
+        in other words the edges of the space are global for ALL
+        IN ALL SETS
 
-        # returns true if the dimension is modified
-        # returns false if no modification executed
-
+        returns true if the dimension is modified
+        returns false if no modification executed
+        '''
         edge = self.DENSITY_RADIUS
 
         vprint('Checking global dimensions...')
@@ -133,7 +131,7 @@ class PointSet:
         R = self.DENSITY_RADIUS
 
         def evalDens(x, y, z):
-            return max(gf.dens(R, gf.norm([x, y, z])), 0)
+            return max(globals.dens(R, globals.norm([x, y, z])), 0)
         # localMesh ##
         side = np.arange(-R, R, PointSet.DELTA)
         mX, mY, mZ = np.meshgrid(side, side, side)
@@ -154,15 +152,15 @@ class PointSet:
         return self.D
 
     def getBinned(self):
-        self.binterval = gf.getBinterval(self.D, self.BINSTEPS)
+        self.binterval = globals.getBinterval(self.D, self.BINSTEPS)
 
         def binVal(x):
-            return self.interval[gf.findNearest(self.binterval, x)]
+            return self.interval[globals.findNearest(self.binterval, x)]
 
         return np.vectorize(binVal)(self.D)
 
     def getBinnedVolumes(self):
-        self.binterval = gf.getBinterval(self.D, self.BINSTEPS)
+        self.binterval = globals.getBinterval(self.D, self.BINSTEPS)
         if self.binVols:
             return self.binVols
         for binStep in self.binterval:
@@ -171,7 +169,7 @@ class PointSet:
         return self.binVols
 
     def setDensityTensor(self):
-        if verbose:
+        if globals.verbose:
             v.printHeader('Calculating density tensor for ' + self.IN_FILE)
         self.printOpts()
         self.setSampleDensity()
@@ -182,10 +180,10 @@ class PointSet:
             np.prod(axesLen)))
         self.D = np.zeros(axesLen, dtype=np.float)
         vprint("Calculating density tensor")
-        if verbose:
+        if globals.verbose:
             bar = v.StatusBar(len(self.pointList))
         for P in self.pointList:
-            if verbose:
+            if globals.verbose:
                 bar.update()
             # top left coordinates ###
             C = (P[0] - self.DENSITY_RADIUS,

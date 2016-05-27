@@ -6,6 +6,7 @@ defThd = 1000
 defRes = 50
 defBin = 3
 
+
 parser = argparse.ArgumentParser(
     description='''DENANT: Densitiy Analysis Tool for 3D
     points overlap statistics''',
@@ -62,8 +63,8 @@ parser.add_argument(
     '-c', '--cartesian',
     action='store_true',
     help='''Takes the cartesian product of the given option set
-            and handles each productum as a sample.
-            Evaluates to TRUE by default if only one input is
+            and handles each productum as an individual input argument.
+            Evaluates to TRUE by default if only ONE input is
             specified with multiple options. If -c flag is not set
             for multiple input files, then options will be applied
             in respect of the input order, and will be extended by
@@ -76,20 +77,44 @@ parser.add_argument(
     help='Save output images into separate subfolders of output folder')
 
 
-args = parser.parse_args()
+parser.add_argument(
+    '-vs', '--versus',
+    action='store_true',
+    help='''VERSUS MODE: In versus mode only two inputs are accepted with the
+          corresponding parameters'''
+)
 
-if len(args.inputs) == 1 or args.cartesian:
-    # make a Cartesian product of sample value pairs
-    I, R, B = [], [], []
-    for element in itertools.product(args.inputs, args.rad, args.binn):
-        I.append(element[0])
-        R.append(element[1])
-        B.append(element[2])
-    args.inputs, args.rad, args.binn = I, R, B
-else:
-    # extend default values for unspecified samples
-    if len(args.rad) < len(args.inputs):
-        args.rad.extend([defRad] * (len(args.inputs) - len(args.rad)))
+def reshapeInput(args):
 
-    if len(args.binn) < len(args.inputs):
-        args.binn.extend([defBin] * (len(args.inputs) - len(args.binn)))
+    
+    
+    '''Completing the user input if necessary'''
+
+    if args.versus and len(args.inputs) > 2:
+        exit('VERSUS MODE ERROR: Wrong number of inputs: ' + len(args.inputs))
+
+    if len(args.inputs) == 1:
+        args.cartesian = True
+
+    if args.cartesian:
+        '''make a Cartesian product of sample value pairs'''
+        I, R, B = [], [], []
+        for element in itertools.product(args.inputs, args.rad, args.binn):
+            I.append(element[0])
+            R.append(element[1])
+            B.append(element[2])
+        args.inputs, args.rad, args.binn = I, R, B
+    else:
+        '''extend default values for unspecified samples'''
+        if len(args.rad) < len(args.inputs):
+            args.rad.extend([defRad] * (len(args.inputs) - len(args.rad)))
+
+        if len(args.binn) < len(args.inputs):
+            args.binn.extend([defBin] * (len(args.inputs) - len(args.binn)))
+
+
+def parse(reshape=True):
+    args = parser.parse_args()
+    if reshape:
+        reshapeInput(args)
+    return args

@@ -1,10 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
-import globalFunctions as gf
+import globals as globals
 import os
 
-findNearest = gf.findNearest
+findNearest = globals.findNearest
 
 
 def printHeader(h):
@@ -44,7 +44,7 @@ class StatusBar:
             self.printBar()
 
 
-class TensorReader:
+class SingleTensorPlot:
 
     def __init__(self, dataset):
         self.ds = dataset
@@ -59,14 +59,14 @@ class TensorReader:
         if separated:
             separated_dir = '{}-radius{}-bin{}'.format(
                 OUT_PATH, self.ds.DENSITY_RADIUS, self.ds.BINSTEPS)
-            gf.ensure_dir(separated_dir)
+            globals.ensure_dir(separated_dir)
 
             for step in range(self.ds.BINSTEPS):
                 file_name = os.path.normpath(separated_dir + '/' + tail)
                 OUT_NAME = '{}-radius{}-step{}.png'.format(
                     file_name, self.ds.DENSITY_RADIUS, step)
                 self.getSeparatedFigure(step).savefig(OUT_NAME)
-                gf.printVerbose('\t' + os.path.split(OUT_NAME)[1])
+                globals.printVerbose('\t' + os.path.split(OUT_NAME)[1])
                 if bar:
                     bar.update()
 
@@ -74,7 +74,7 @@ class TensorReader:
             OUT_NAME = '{}-radius{}-bin{}.png'.format(
                 OUT_PATH, self.ds.DENSITY_RADIUS, self.ds.BINSTEPS)
 
-            gf.printVerbose(OUT_NAME)
+            globals.printVerbose(OUT_NAME)
 
             self.getSingleFigure(bar).savefig(OUT_NAME)
 
@@ -163,7 +163,7 @@ class TensorReader:
         return fig
 
     def getBinned(self, steps):
-        self.binterval = gf.getBinterval(self.T, self.ds.BINSTEPS)
+        self.binterval = globals.getBinterval(self.T, self.ds.BINSTEPS)
         TSum = np.zeros(self.T.shape)
         for b in self.binterval:
             TSum += self.T > b
