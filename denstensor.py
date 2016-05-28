@@ -8,6 +8,9 @@ findNearestIndex = globals.findNearest
 vprint = globals.printVerbose
 
 
+def getTresholdedVolumeMeasure(tensor, treshold):
+    return np.count_nonzero(tensor > treshold) * globals.DELTA
+
 class PointSet:
 
     def __init__(self, D, I, B):
@@ -17,7 +20,7 @@ class PointSet:
         self.BINSTEPS = B
         self.binVols = []
         if globals.verbose:
-            v.printHeader('Reading in file:   ' + self.IN_FILE)
+            globals.printHeader('Reading in file:   ' + self.IN_FILE)
         try:
             self.IN = pd.read_csv(self.IN_FILE, delimiter='\t')
         except IOError as e:
@@ -156,7 +159,8 @@ class PointSet:
 
         return np.vectorize(binVal)(self.D)
 
-    def getBinnedVolumes(self):
+    
+    def getBinVols(self):
         '''Return an array with the volumes of the thresholded density tensor
 
         Points with density over the thresholded level are
@@ -167,15 +171,14 @@ class PointSet:
         self.binterval = globals.getBinterval(self.D, self.BINSTEPS)
         if self.binVols:
             return self.binVols
-        for binStep in self.binterval:
-            self.binVols.append(
-                np.count_nonzero(self.D > binStep) * globals.DELTA)
+        for binstep in self.binterval:
+            self.binVols.append(getTresholdedVolumeMeasure(self.D, binstep))
         return self.binVols
 
     
     def setDensityTensor(self):
         if globals.verbose:
-            v.printHeader('Calculating density tensor for ' + self.IN_FILE)
+            globals.printHeader('Calculating density tensor for ' + self.IN_FILE)
         self.printOpts()
         self.setSampleDensity()
         self.read3DPoints()
@@ -186,7 +189,7 @@ class PointSet:
         self.D = np.zeros(axesLen, dtype=np.float)
         vprint("Calculating density tensor")
         if globals.verbose:
-            bar = v.StatusBar(len(self.pointList))
+            bar = globals.StatusBar(len(self.pointList))
         for P in self.pointList:
             if globals.verbose:
                 bar.update()

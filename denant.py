@@ -3,7 +3,7 @@ import numpy as np
 import sys
 # OWN MODULES#
 import promptParser
-import tensorplot as v
+import tensorplot as tplt
 import globals
 import denstensor as dt
 
@@ -24,29 +24,38 @@ def main():
         ds.checkDimension()
         sets.append(ds)
 
-    v.printHeader('Calculating density tensors...')
-    bar = v.StatusBar(len(sets))
+    globals.printHeader('Calculating density tensors...')
+    bar = globals.StatusBar(len(sets))
     for ds in sets:
         ds.setDensityTensor()
         if not globals.verbose:
             bar.update()
 
-    v.printHeader('Saving figures...')
+    globals.printHeader('Saving figures...')
+    if globals.versus:
+        versusMode(sets)
+    else:
+        singleMode(sets)
+def versusMode(sets):
+    tplt.VersusTensorPlot(sets[0], sets[1]).savefig(globals.output)
+    
+    
+def singleMode(sets):
     if globals.verbose:
         for i, ds in enumerate(sets):
-            v.SingleTensorPlot(ds).savefig(globals.output[0], globals.separated)
+            tplt.SingleTensorPlot(ds).savefig(globals.output, globals.separated)
         print ('\nSuccess!')
     else:
         job_count = 0
         for ds in sets:
             job_count += ds.BINSTEPS
 
-        bar = v.StatusBar(job_count)
+        bar = globals.StatusBar(job_count)
         for i, ds in enumerate(sets):
-            v.SingleTensorPlot(ds).savefig(
+            tplt.SingleTensorPlot(ds).savefig(
                 globals.output[0], globals.separated, bar)
 
-
+    
 if __name__ == "__main__":
     try:
         main()

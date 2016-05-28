@@ -1,10 +1,6 @@
 import argparse
 import itertools
-
-defRad = 1000
-defThd = 1000
-defRes = 50
-defBin = 3
+import globals
 
 
 parser = argparse.ArgumentParser(
@@ -32,7 +28,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '-b', '--binning', nargs='+',
-    type=int, default=[defBin],
+    type=int, default=globals.binn,
     metavar='',
     help='Binning step (does *NOT* bin the measurement values)',
     dest='binn'
@@ -41,7 +37,7 @@ parser.add_argument(
 parser.add_argument(
     '-r', '--radius', nargs='+',
     help='Rad(s) of density sphere(s) for corresponding input(s)...',
-    type=int, default=[defRad],
+    type=int, default=globals.rad,
     metavar='',
     dest='rad'
 )
@@ -49,14 +45,14 @@ parser.add_argument(
 parser.add_argument(
     '-R', '--resolution',
     help='steps for SHORTEST axis (corresponding axes will be adjusted)',
-    type=int, default=defRes,
+    type=int, default=globals.res,
     metavar='',
     dest='res')
 
 parser.add_argument(
     '-o', '--output', nargs=1,
     help='Specify output directory (relative path from call)',
-    default=['default_output'],
+    default=[globals.output],
     metavar='')
 
 parser.add_argument(
@@ -79,19 +75,24 @@ parser.add_argument(
 
 parser.add_argument(
     '-vs', '--versus',
-    action='store_true',
-    help='''VERSUS MODE: In versus mode only two inputs are accepted with the
-          corresponding parameters'''
+    nargs=2,
+    help='''VERSUS MODE: In this mode only two inputs are accepted with the
+            corresponding threshold values. Specify threshold values after the
+            -vs flag.
+            
+            NOTE: In VERSUS mode the -c -s -b options are discarded.
+            ''',
+    type=int,
+    metavar=''
 )
 
 def reshapeInput(args):
-
-    
     
     '''Completing the user input if necessary'''
 
-    if args.versus and len(args.inputs) > 2:
-        exit('VERSUS MODE ERROR: Wrong number of inputs: ' + len(args.inputs))
+    if args.versus and len(args.inputs) != 2:
+        exit('VERSUS MODE ERROR: Wrong number of inputs: ' +
+             str(len(args.inputs)))
 
     if len(args.inputs) == 1:
         args.cartesian = True
@@ -107,10 +108,11 @@ def reshapeInput(args):
     else:
         '''extend default values for unspecified samples'''
         if len(args.rad) < len(args.inputs):
-            args.rad.extend([defRad] * (len(args.inputs) - len(args.rad)))
+            args.rad.extend(globals.rad * (len(args.inputs) - len(args.rad)))
 
         if len(args.binn) < len(args.inputs):
-            args.binn.extend([defBin] * (len(args.inputs) - len(args.binn)))
+            args.binn.extend(globals.binn * (len(args.inputs) -
+                                                 len(args.binn)))
 
 
 def parse(reshape=True):

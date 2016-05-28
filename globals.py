@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import sys
 
 '''GLOBALLY USED VARIABLES AND FUNCTIONS FOR THE PERIOD OF EACH RUN'''
 
@@ -7,14 +8,14 @@ import os
 verbose = False
 cartesian = False
 separated = False
-versus = False
+versus = None
 
 'Main parameters'
 inputs = []
-binn = []
-rad = []
-res = 0
-output = []
+binn = [3]
+rad = [3000]
+res = 50
+output = 'default_output'
 
 
 'Point Set globals'
@@ -23,6 +24,45 @@ axes = ([], [], [])
 bounds = ([], [], [])
 DELTA = 0
 TotalPoints = 0
+
+
+
+
+class StatusBar:
+
+    def __init__(self, total, barLength=30):
+        self.total = total
+        self.curr = 0
+        self.percentage = 0
+        self.barLength = barLength
+
+    def barStr(self):
+        currBar = self.barLength * self.percentage / 100
+        return '[' + "=" * currBar + " " * (self.barLength - currBar) + ']'
+
+    def printBar(self):
+        if(self.percentage <= 100):
+            print("\r  " + self.barStr() + "  Done/Total (" +
+                  str(self.curr) + '/' + str(self.total) + ")   " +
+                  str(100 * self.curr / self.total) + "%     "),
+            sys.stdout.flush()
+            if(self.percentage == 100):
+                print '\n'
+
+    def update(self):
+        self.curr += 1
+        currPercentage = self.curr * 100 / self.total
+        if(currPercentage > self.percentage):
+            self.percentage = currPercentage
+            self.printBar()
+
+
+def printHeader(h):
+
+    hBar = len(h) * '-'
+    print '\n' + hBar
+    print h
+    print hBar
 
 def printVerbose(string):
     if verbose is True:
@@ -44,6 +84,8 @@ def ensure_dir(f):
         printVerbose('OK, Directory exists:\n\t{}'.format(d))
 
 norm = np.linalg.norm
+
+
 
 def getBinterval(T, steps):
         maxVal = np.max(T)
@@ -97,6 +139,5 @@ def initFromPrompt():
     binn = args.binn
     rad = args.rad
     res = args.res
-    output = args.output
-    
+    output = args.output[0]
     
