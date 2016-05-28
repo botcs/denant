@@ -43,13 +43,48 @@ class StatusBar:
             self.percentage = currPercentage
             self.printBar()
 
+def forceAspect(ax,aspect=1):
+    im = ax.get_images()
+    extent =  im[0].get_extent()
+    ax.set_aspect(abs((extent[1]-extent[0])/(extent[3]-extent[2]))/aspect)
 
+class VersusTensorPlot(object):
+    """For plotting intersection of the two specified samples.
+    ***IMPORTANT*** Only specified parameters are accepted, since the
+    trial and error would not be an efficient workflow here
+    """
+    
+    def __init__(self, dataset1, dataset2):
+        self.ds1 = dataset1
+        self.ds2 = dataset2
+        self.T1 = np.sum(self.ds1.D, axis=2)
+        self.T2 = np.sum(self.ds2.D, axis=2)
+        
+        
+
+        
+            
+            
 class SingleTensorPlot:
+    '''For visualising single density tensor's plot with the corresponding
+    treshold, binning value and the tresholded space's volume Two
+    possible output:
 
+    single map: the actual binning map is the top picture and the
+    pictures beneath are representing the tresholded volumes
+    
+    separated map: figure is generated for each binning step in sample
+    with the full map on the left and the actual tresholded volume on
+    the right
+
+    '''
     def __init__(self, dataset):
         self.ds = dataset
-        # visualize default: mean of values on axis Z
-        self.T = np.mean(self.ds.D, axis=2)
+        '''Visualize default: mean of values on axis Z'''
+        #self.T = np.mean(self.ds.D, axis=2)
+        #self.T = self.ds.D[:,:,24]
+        self.T = np.sum(self.ds.D, axis=2)
+        self.T = self.T.transpose()
 
     def savefig(self, output_dir, separated=None, bar=None):
         head, tail = os.path.split(self.ds.IN_FILE)
@@ -75,8 +110,8 @@ class SingleTensorPlot:
                 OUT_PATH, self.ds.DENSITY_RADIUS, self.ds.BINSTEPS)
 
             globals.printVerbose(OUT_NAME)
-
             self.getSingleFigure(bar).savefig(OUT_NAME)
+            #plt.show()
 
     def getSeparatedFigure(self, step):
         axX = self.ds.axes[0]
@@ -104,7 +139,7 @@ class SingleTensorPlot:
             self.T > self.binterval[step],
             cmap=plt.cm.gray,
             aspect=1,
-            interpolation='bicubic', extent=corners)
+            interpolation=None, extent=corners)
         ax.locator_params(nbins=4)
 
         fig.set_size_inches(10, 6)
@@ -132,7 +167,11 @@ class SingleTensorPlot:
             self.ds.DENSITY_RADIUS, self.ds.BINSTEPS))
         mainMap.imshow(
             self.getBinned(self.ds.BINSTEPS), cmap=plt.cm.gray,
-            interpolation=None, extent=corners, aspect=1)
+            interpolation=None,
+            aspect=1,
+            extent=corners
+        )
+        #forceAspect(mainMap)
         mainMap.locator_params(nbins=4)
 
         plt.tight_layout()
@@ -153,7 +192,9 @@ class SingleTensorPlot:
                 self.T > self.binterval[step],
                 cmap=plt.cm.gray,
                 aspect=1,
-                interpolation='bicubic', extent=corners)
+                interpolation=None,
+                extent=corners
+            )
             ax.locator_params(nbins=4)
             if bar:
                 bar.update()
