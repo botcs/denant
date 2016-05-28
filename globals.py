@@ -17,14 +17,12 @@ res = 0
 output = []
 
 
-
+'Point Set globals'
 RESOLUTION = 0
 axes = ([], [], [])
 bounds = ([], [], [])
 DELTA = 0
 TotalPoints = 0
-
-
 
 def printVerbose(string):
     if verbose is True:

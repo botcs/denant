@@ -14,9 +14,6 @@ np.set_printoptions(precision=2)
 # RUNNING CODE
 def main():
     globals.initFromPrompt()
-    
-    dt.PointSet.RESOLUTION = globals.res
-
     sets = []
     globals.ensure_dir(globals.output[0])
 

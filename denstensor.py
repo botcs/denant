@@ -26,32 +26,28 @@ class PointSet:
             raise
 
     'GLOBAL VARIABLES'
-    RESOLUTION = 0
-    axes = ([], [], [])
-    bounds = ([], [], [])
-    DELTA = 0
-    TotalPoints = 0
 
     # I/O SUPPORT FUNCTIONS ###
     def read3DPoints(self):
         self.pointList = self.IN[['X', 'Y', 'Z']].values
-        PointSet.TotalPoints += len(self.pointList)
+        globals.TotalPoints += len(self.pointList)
         vprint("Reading {} point finished, total count: {}".format(
-            len(self.pointList), PointSet.TotalPoints))
+            len(self.pointList), globals.TotalPoints))
 
     def checkDimension(self):
-        ''' CHECKS GLOBAL DIMENSIONS FOR DATA SET
-         one session handles every point, regarding the largest density sphere
-        in an equally large space to be able to sum their densities if needed
+        '''CHECKS GLOBAL DIMENSIONS FOR DATA SET one session handles every
+        point, regarding the largest density sphere in an equally
+        large space to be able to sum their densities if needed
 
-        in other words the edges of the space are global for ALL
-        IN ALL SETS
+        in other words the edges of the space are global for ALL IN
+        ALL SETS
 
-        returns true if the dimension is modified
-        returns false if no modification executed
+        returns true if the dimension is modified returns false if no
+        modification executed
+
         '''
         edge = self.DENSITY_RADIUS
-
+        
         vprint('Checking global dimensions...')
         bounds = (
             [self.IN.X.min() - edge,
@@ -64,41 +60,42 @@ class PointSet:
              self.IN.Z.max() + edge]
         )
 
-        axisX = PointSet.axes[0]
-        axisY = PointSet.axes[1]
-        axisZ = PointSet.axes[2]
-
-        # any(PointSet.axes) should work as an emptiness check...
+        axisX = globals.axes[0]
+        axisY = globals.axes[1]
+        axisZ = globals.axes[2]
+        
+        # any(globals.axes) should work as an emptiness check...
         # but it doesn't... dunno y =(
-        if any(PointSet.axes[0]):
+        if any(globals.axes[0]):
             if (not (bounds[0][0] < axisX[0] or bounds[0][1] > axisX[-1] or
                      bounds[1][0] < axisY[0] or bounds[1][1] > axisY[-1] or
-                     bounds[2][0] < axisZ[0] or bounds[2][1] > axisY[-1])):
+                     bounds[2][0] < axisZ[0] or bounds[2][1] > axisZ[-1])):
                 vprint('No space extension needed')
                 return False
             else:
                 vprint('Extending axes')
                 for i in (0, 1, 2):
-                    bounds[i][0] = min(bounds[i][0], PointSet.axes[i][0])
-                    bounds[i][1] = max(bounds[i][1], PointSet.axes[i][-1])
+                    bounds[i][0] = min(bounds[i][0], globals.axes[i][0])
+                    bounds[i][1] = max(bounds[i][1], globals.axes[i][-1])
 
-        PointSet.bounds = bounds
+        globals.bounds = bounds
         intervals = (
             bounds[0][1] - bounds[0][0],
             bounds[1][1] - bounds[1][0],
             bounds[2][1] - bounds[2][0]
         )
 
-        PointSet.DELTA = min(intervals) / float(PointSet.RESOLUTION)
-
+        globals.DELTA = min(intervals) / float(globals.res)
+        
         # small constant for arange skew
         c = min(intervals) * 0.01
-        PointSet.axes = (
-            np.arange(bounds[0][0] - c, bounds[0][1] + c, PointSet.DELTA),
-            np.arange(bounds[1][0] - c, bounds[1][1] + c, PointSet.DELTA),
-            np.arange(bounds[2][0] - c, bounds[2][1] + c, PointSet.DELTA),
+        globals.axes = (
+            np.arange(bounds[0][0] - c, bounds[0][1] + c, globals.DELTA),
+            np.arange(bounds[1][0] - c, bounds[1][1] + c, globals.DELTA),
+            np.arange(bounds[2][0] - c, bounds[2][1] + c, globals.DELTA),
         )
 
+        
         vprint("Space expanded with new parameters:")
         PointSet.printBounds()
         return True
@@ -106,17 +103,17 @@ class PointSet:
     # STATUS MONITORING ###
     @classmethod
     def printBounds(cls):
-        bounds = PointSet.bounds
+        bounds = globals.bounds
 
         for i, W in enumerate('XYZ'):
             vprint("{} axis [start, end, length]:\n\t{}\t{}\t{}\t".format(
-                W, bounds[i][0], bounds[i][1], len(PointSet.axes[i])))
+                W, bounds[i][0], bounds[i][1], len(globals.axes[i])))
 
     def printOpts(self):
         vprint('\tOptions for this set:\t')
         vprint('\tBINNING STEPS:\t{}'.format(self.BINSTEPS))
         vprint('\tDENS RADIUS:\t{}'.format(self.DENSITY_RADIUS))
-        vprint('\tRESOLUTION:\t{}'.format(PointSet.RESOLUTION))
+        vprint('\tRESOLUTION:\t{}'.format(globals.res))
 
     def coarseErr(self):
         vprint('\nProblem: grid is too coarse, increment resolution!!')
@@ -133,7 +130,7 @@ class PointSet:
         def evalDens(x, y, z):
             return max(globals.dens(R, globals.norm([x, y, z])), 0)
         # localMesh ##
-        side = np.arange(-R, R, PointSet.DELTA)
+        side = np.arange(-R, R, globals.DELTA)
         mX, mY, mZ = np.meshgrid(side, side, side)
         try:
             self.sampleTens = np.vectorize(
@@ -160,14 +157,22 @@ class PointSet:
         return np.vectorize(binVal)(self.D)
 
     def getBinnedVolumes(self):
+        '''Return an array with the volumes of the thresholded density tensor
+
+        Points with density over the thresholded level are
+        evaluated as true and then these entries are counted.
+        The results are multiplied with the delta of the tensor's grid
+        (the physical distance between two neighbouring point)
+        '''
         self.binterval = globals.getBinterval(self.D, self.BINSTEPS)
         if self.binVols:
             return self.binVols
         for binStep in self.binterval:
             self.binVols.append(
-                np.count_nonzero(self.D > binStep) * PointSet.DELTA)
+                np.count_nonzero(self.D > binStep) * globals.DELTA)
         return self.binVols
 
+    
     def setDensityTensor(self):
         if globals.verbose:
             v.printHeader('Calculating density tensor for ' + self.IN_FILE)
@@ -175,7 +180,7 @@ class PointSet:
         self.setSampleDensity()
         self.read3DPoints()
 
-        axesLen = np.vectorize(len)(PointSet.axes)
+        axesLen = np.vectorize(len)(globals.axes)
         vprint('Allocating memory, total: {} entries'.format(
             np.prod(axesLen)))
         self.D = np.zeros(axesLen, dtype=np.float)
@@ -190,9 +195,9 @@ class PointSet:
                  P[1] - self.DENSITY_RADIUS,
                  P[2] - self.DENSITY_RADIUS)
 
-            xFrom = findNearestIndex(PointSet.axes[0], C[0])
-            yFrom = findNearestIndex(PointSet.axes[1], C[1])
-            zFrom = findNearestIndex(PointSet.axes[2], C[2])
+            xFrom = findNearestIndex(globals.axes[0], C[0])
+            yFrom = findNearestIndex(globals.axes[1], C[1])
+            zFrom = findNearestIndex(globals.axes[2], C[2])
             xTo = xFrom + self.sampleTens.shape[0]
             yTo = yFrom + self.sampleTens.shape[1]
             zTo = zFrom + self.sampleTens.shape[2]

@@ -48,7 +48,7 @@ def forceAspect(ax,aspect=1):
     extent =  im[0].get_extent()
     ax.set_aspect(abs((extent[1]-extent[0])/(extent[3]-extent[2]))/aspect)
 
-class VersusTensorPlot(object):
+class VersusTensorPlot:
     """For plotting intersection of the two specified samples.
     ***IMPORTANT*** Only specified parameters are accepted, since the
     trial and error would not be an efficient workflow here
@@ -59,8 +59,41 @@ class VersusTensorPlot(object):
         self.ds2 = dataset2
         self.T1 = np.sum(self.ds1.D, axis=2)
         self.T2 = np.sum(self.ds2.D, axis=2)
-        
-        
+
+    def getFigure(self, step):
+        axX = globals.axes[0]
+        axY = globals.axes[1]
+        corners = [axX[0], axX[-1], axY[-1], axY[0]]
+        vols = self.ds.getBinnedVolumes()
+
+        plt.close()
+        fig = plt.gcf()
+        fig.suptitle(self.ds.IN_FILE, fontsize=14, fontweight='bold')
+
+        mainMap = plt.subplot(121)
+        mainMap.set_title('Density map,\nRadius: {}\nBinning steps: {}'.format(
+            self.ds.DENSITY_RADIUS, self.ds.BINSTEPS))
+        mainMap.imshow(
+            self.getBinned(self.ds.BINSTEPS), cmap=plt.cm.gray,
+            interpolation=None, extent=corners, aspect=1)
+        mainMap.locator_params(nbins=4)
+
+        ax = plt.subplot(122)
+        title = 'Step: {}\nTreshold value: {}\nThresholded volume: {}'.format(
+            step, self.ds.binterval[step], vols[step])
+        ax.set_title(title)
+        ax.imshow(
+            self.T > self.binterval[step],
+            cmap=plt.cm.gray,
+            aspect=1,
+            interpolation=None, extent=corners)
+        ax.locator_params(nbins=4)
+
+        fig.set_size_inches(10, 6)
+        plt.tight_layout()
+
+        return fig
+
 
         
             
@@ -114,8 +147,8 @@ class SingleTensorPlot:
             #plt.show()
 
     def getSeparatedFigure(self, step):
-        axX = self.ds.axes[0]
-        axY = self.ds.axes[1]
+        axX = globals.axes[0]
+        axY = globals.axes[1]
         corners = [axX[0], axX[-1], axY[-1], axY[0]]
         vols = self.ds.getBinnedVolumes()
 
@@ -148,8 +181,8 @@ class SingleTensorPlot:
         return fig
 
     def getSingleFigure(self, bar=None):
-        axX = self.ds.axes[0]
-        axY = self.ds.axes[1]
+        axX = globals.axes[0]
+        axY = globals.axes[1]
         corners = [axX[0], axX[-1], axY[-1], axY[0]]
         vols = self.ds.getBinnedVolumes()
         colnum = 3
@@ -205,7 +238,7 @@ class SingleTensorPlot:
 
     def getBinned(self, steps):
         self.binterval = globals.getBinterval(self.T, self.ds.BINSTEPS)
-        TSum = np.zeros(self.T.shape)
+        TSum = np.zeros(self.T.shape, dtype=bool)
         for b in self.binterval:
             TSum += self.T > b
         return TSum
