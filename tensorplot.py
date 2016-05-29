@@ -60,7 +60,6 @@ class VersusTensorPlot:
 
         fig.set_size_inches(10, 6)
         plt.tight_layout()
-        plt.show()
 
         return fig
 
@@ -218,7 +217,6 @@ class SingleTensorPlot:
 
         fig.set_size_inches(colnum * 9, gridShape[0] * 8)
         fig.set_dpi(110)
-        plt.show()
         return fig
 
     def getBinned(self, steps):

@@ -19,8 +19,11 @@ class PointSet:
         self.IN_FILE = I
         self.BINSTEPS = B
         self.binVols = []
+
+
         if globals.verbose:
             globals.printHeader('Reading in file:   ' + self.IN_FILE)
+        
         try:
             self.IN = pd.read_csv(self.IN_FILE, delimiter='\t')
         except IOError as e:
