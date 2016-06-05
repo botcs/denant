@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from matplotlib import colors
 import numpy as np
 import globals
 import denstensor
@@ -7,17 +8,19 @@ import os
 findNearest = globals.findNearest
 
 
-def forceAspect(ax,aspect=1):
+def forceAspect(ax, aspect=1):
     im = ax.get_images()
-    extent =  im[0].get_extent()
-    ax.set_aspect(abs((extent[1]-extent[0])/(extent[3]-extent[2]))/aspect)
+    extent = im[0].get_extent()
+    ax.set_aspect(abs((extent[1] - extent[0]) /
+                      (extent[3] - extent[2])) / aspect)
+
 
 class VersusTensorPlot:
     """For plotting intersection of the two specified samples.
     ***IMPORTANT*** Only specified parameters are accepted, since the
     trial and error would not be an efficient workflow here
     """
-    
+
     def __init__(self, dataset1, dataset2):
         self.ds1 = dataset1
         self.ds2 = dataset2
@@ -36,22 +39,34 @@ class VersusTensorPlot:
             fontsize=14, fontweight='bold')
 
         intersectionMap = plt.subplot(121)
-        intersectionMap.set_title('The intersections are highlighted')
+        intersectionMap.set_title(
+            'White: intersection\nRed: {}\nGreen: {}'.format(
+                self.ds1.name, self.ds2.name))
         ISTensor = np.zeros(self.T1.shape, dtype=int)
         '''TURNING BOOLEAN ARRAY TO INT ARRAY'''
-        ISTensor = ISTensor + 1*(self.T1 > globals.versus[0])
-        ISTensor = ISTensor + 1*(self.T2 > globals.versus[1])
+        ISTensor = ISTensor + 1 * (self.T1 > globals.versus[0])
+        ISTensor = ISTensor + 2 * (self.T2 > globals.versus[1])
+
+        cmap = colors.ListedColormap(['black', 'red', 'green', 'white'])
+        bounds = [0, 1, 2, 3, 4]
+        norm = colors.BoundaryNorm(bounds, cmap.N)
+
         intersectionMap.imshow(
-            ISTensor, cmap=plt.cm.gray,
-            interpolation='None', aspect=1, extent=corners)
+            ISTensor,
+            cmap=cmap,
+            norm=norm,
+            interpolation='None',
+            aspect=1, extent=corners)
         intersectionMap.locator_params(nbins=4)
 
         ax = plt.subplot(122)
-        title = '''Thresholded volume:
-                {}'''.format(denstensor.getTresholdedVolumeMeasure(ISTensor, 1))
+        title = '{} treshold:{}\n{} treshold:{}\nThresholded volume: {}'.format(
+            self.ds1.name, globals.versus[0],
+            self.ds2.name, globals.versus[1],
+            denstensor.getTresholdedVolumeMeasure(ISTensor, 2))
         ax.set_title(title)
         ax.imshow(
-            ISTensor > 1,
+            ISTensor > 2,
             cmap=plt.cm.gray,
             aspect=1,
             interpolation='None',
@@ -64,21 +79,19 @@ class VersusTensorPlot:
         return fig
 
     def savefig(self, output_dir):
-        head, tail1 = os.path.split(self.ds1.IN_FILE)
-        tail1, ext = os.path.splitext(tail1)
-        OUT_PATH = os.path.normpath(output_dir + '/' + tail1)
 
-        head, tail2 = os.path.split(self.ds1.IN_FILE)
-        tail2, ext = os.path.splitext(tail2)
-
-        OUT_NAME = '{}-VS-{}-treshold-{}-{}.png'.format(
-            OUT_PATH, tail2, globals.versus[0], globals.versus[1])
+        OUT_PATH = os.path.normpath(output_dir + '/')
+        OUT_NAME = '{}/{}-VS-{}-treshold-{}-{}.png'.format(
+            OUT_PATH,
+            self.ds1.name,
+            self.ds1.name,
+            globals.versus[0],
+            globals.versus[1])
 
         print(OUT_NAME)
         self.getFigure().savefig(OUT_NAME)
-        
-            
-            
+
+
 class SingleTensorPlot:
     '''For visualising single density tensor's plot with the corresponding
     treshold, binning value and the tresholded space's volume Two
@@ -86,12 +99,13 @@ class SingleTensorPlot:
 
     single map: the actual binning map is the top picture and the
     pictures beneath are representing the tresholded volumes
-    
+
     separated map: figure is generated for each binning step in sample
     with the full map on the left and the actual tresholded volume on
     the right
 
     '''
+
     def __init__(self, dataset):
         self.ds = dataset
         '''Visualize default: mean of values on axis Z'''
@@ -125,7 +139,7 @@ class SingleTensorPlot:
 
             globals.printVerbose(OUT_NAME)
             self.getSingleFigure(bar).savefig(OUT_NAME)
-            #plt.show()
+            # plt.show()
 
     def getSeparatedFigure(self, step):
         axX = globals.axes[0]
@@ -180,14 +194,14 @@ class SingleTensorPlot:
             gridShape, (0, colnum / 2))
         mainMap.set_title('Density map,\nRadius: {}\nBinning steps: {}'.format(
             self.ds.DENSITY_RADIUS, self.ds.BINSTEPS))
-        
+
         mainMap.imshow(
             self.getBinned(self.ds.BINSTEPS), cmap=plt.cm.gray,
             interpolation='None',
             aspect=1,
             extent=corners
         )
-        #forceAspect(mainMap)
+        # forceAspect(mainMap)
         mainMap.locator_params(nbins=4)
 
         plt.tight_layout()

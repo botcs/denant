@@ -26,8 +26,6 @@ DELTA = 0
 TotalPoints = 0
 
 
-
-
 class StatusBar:
 
     def __init__(self, total, barLength=30):
@@ -64,13 +62,15 @@ def printHeader(h):
     print h
     print hBar
 
+
 def printVerbose(string):
     if verbose is True:
         print(string)
 
+
 def ensure_dir(f):
 
-    d = os.path.dirname(f+'/')
+    d = os.path.dirname(f + '/')
 
     printVerbose('Checking output path...  ')
     if not os.path.exists(d):
@@ -86,15 +86,14 @@ def ensure_dir(f):
 norm = np.linalg.norm
 
 
-
 def getBinterval(T, steps):
-        maxVal = np.max(T)
-        minVal = np.min(T)
-        '''everything is truncated to the lowest value
+    maxVal = np.max(T)
+    minVal = np.min(T)
+    '''everything is truncated to the lowest value
         so the max value is always yields zero measure
         when tresholding'''
 
-        return np.linspace(minVal, maxVal + 0.001, steps + 1)[:-1]
+    return np.linspace(minVal, maxVal + 0.001, steps + 1)[:-1]
 
 
 def dens(DENSITY_RADIUS, r):
@@ -116,7 +115,7 @@ def initFromPrompt():
 
     'Flags'
     global verbose
-    global cartesian 
+    global cartesian
     global separated
     global versus
 
@@ -140,4 +139,3 @@ def initFromPrompt():
     rad = args.rad
     res = args.res
     output = args.output[0]
-    
