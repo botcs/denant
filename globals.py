@@ -72,7 +72,7 @@ def ensure_dir(f):
 
     d = os.path.dirname(f + '/')
 
-    printVerbose('Checking output path...  ')
+    printVerbose('Checking output path...  \'' + d + '\'')
     if not os.path.exists(d):
         printVerbose('Making directory:\n\t{}'.format(d))
         try:
@@ -138,4 +138,4 @@ def initFromPrompt():
     binn = args.binn
     rad = args.rad
     res = args.res
-    output = args.output[0]
+    output = os.path.normpath(args.output[0] + '/')

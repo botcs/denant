@@ -34,18 +34,26 @@ def main():
     step += 1
     globals.printHeader('  Calculating density tensors ({}/2)'.format(step))
     bar = globals.StatusBar(len(sets))
+    final_sets = []
+    empty_sets = []
     for ds in sets:
-        ds.setDensityTensor()
+        if ds.setDensityTensor():
+            final_sets.append(ds)
+        else:
+            empty_sets.append(ds)
         if not globals.verbose:
             bar.update()
 
     step += 1
     globals.printHeader('  Saving figures ({}/2)'.format(step))
+    print(' Removed sets due to coarse error:')
+    for e in empty_sets:
+        print e.name
     globals.ensure_dir(globals.output)
     if globals.versus:
-        versusMode(sets)
+        versusMode(final_sets)
     else:
-        singleMode(sets)
+        singleMode(final_sets)
 
 
 def versusMode(sets):
@@ -53,6 +61,7 @@ def versusMode(sets):
 
 
 def singleMode(sets):
+
     if globals.verbose:
         for i, ds in enumerate(sets):
             tplt.SingleTensorPlot(ds).savefig(

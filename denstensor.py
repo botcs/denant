@@ -25,7 +25,8 @@ class PointSet:
 
         head, tail = os.path.split(self.IN_FILE)
         tail, ext = os.path.splitext(tail)
-        self.name = tail + '-rad' + str(self.DENSITY_RADIUS)
+        self.name = tail + '-rad' + \
+            str(self.DENSITY_RADIUS) + '-bin' + str(self.BINSTEPS)
 
     '''
     def __init__(self, D, B, A, name):
@@ -130,6 +131,7 @@ class PointSet:
 
     def coarseErr(self):
         vprint('\nProblem: grid is too coarse, increment resolution!!')
+        return True
         #exit('coarse error')
 
     # MAIN CALCULATION FUNCTIONS ###
@@ -151,10 +153,11 @@ class PointSet:
         except IndexError:
             self.coarseErr()
             raise
-        if np.count_nonzero(self.sampleTens > 0) < 5:
-            self.coarseErr()
 
-        vprint("\bDone")
+        if np.count_nonzero(self.sampleTens > 0) < 5:
+            return self.coarseErr()
+        else:
+            vprint("\bDone")
 
     def getDensityTensor(self):
         if self.checkDimension():
@@ -189,7 +192,9 @@ class PointSet:
                 'Calculating density tensor for ' + self.name)
             self.printOpts()
 
-        self.setSampleDensity()
+        if self.setSampleDensity():
+            '''Sample density construction failed, skip filling with 0'''
+            return False
 
         axesLen = np.vectorize(len)(globals.axes)
         vprint('Allocating memory, total: {} entries'.format(
@@ -219,3 +224,5 @@ class PointSet:
                 self.coarseErr()
                 self.printBounds()
                 raise
+
+        return True

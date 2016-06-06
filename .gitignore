@@ -2,3 +2,5 @@
 *.png
 .txt
 data/
+/#promptParser.py#
+/install.sh~

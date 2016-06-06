@@ -80,15 +80,14 @@ class VersusTensorPlot:
 
     def savefig(self, output_dir):
 
-        OUT_PATH = os.path.normpath(output_dir + '/')
         OUT_NAME = '{}/{}-VS-{}-treshold-{}-{}.png'.format(
-            OUT_PATH,
+            output_dir,
             self.ds1.name,
             self.ds1.name,
             globals.versus[0],
             globals.versus[1])
 
-        print(OUT_NAME)
+        print('Saving...  ' + OUT_NAME)
         self.getFigure().savefig(OUT_NAME)
 
 
@@ -115,29 +114,26 @@ class SingleTensorPlot:
         self.T = self.T.transpose()
 
     def savefig(self, output_dir, separated=None, bar=None):
-        head, tail = os.path.split(self.ds.IN_FILE)
-        tail, ext = os.path.splitext(tail)
-        OUT_PATH = os.path.normpath(output_dir + '/' + tail)
 
         if separated:
-            separated_dir = '{}-radius{}-bin{}'.format(
-                OUT_PATH, self.ds.DENSITY_RADIUS, self.ds.BINSTEPS)
+            separated_dir = '{}/{}'.format(
+                output_dir,
+                self.ds.name)
             globals.ensure_dir(separated_dir)
 
             for step in range(self.ds.BINSTEPS):
-                file_name = os.path.normpath(separated_dir + '/' + tail)
-                OUT_NAME = '{}-radius{}-step{}.png'.format(
-                    file_name, self.ds.DENSITY_RADIUS, step)
+                OUT_NAME = '{}/{}-step{}.png'.format(
+                    separated_dir, self.ds.name, step)
                 self.getSeparatedFigure(step).savefig(OUT_NAME)
                 globals.printVerbose('\t' + os.path.split(OUT_NAME)[1])
                 if bar:
                     bar.update()
 
         else:
-            OUT_NAME = '{}-radius{}-bin{}.png'.format(
-                OUT_PATH, self.ds.DENSITY_RADIUS, self.ds.BINSTEPS)
+            OUT_NAME = '{}/{}.png'.format(
+                output_dir, self.ds.name)
 
-            globals.printVerbose(OUT_NAME)
+            globals.printVerbose('Saving...  ' + OUT_NAME)
             self.getSingleFigure(bar).savefig(OUT_NAME)
             # plt.show()
 
