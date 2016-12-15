@@ -27,6 +27,7 @@ class PointSet:
         tail, ext = os.path.splitext(tail)
         self.name = tail + '-rad' + \
             str(self.DENSITY_RADIUS) + '-bin' + str(self.BINSTEPS)
+        self.Name = tail + '-rad' +  str(self.DENSITY_RADIUS)            
 
     '''
     def __init__(self, D, B, A, name):

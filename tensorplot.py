@@ -80,11 +80,21 @@ class VersusTensorPlot:
             extent=cornersZ)
         intersectionMap.locator_params(nbins=4)
 
-
+        
+        title = 'Dark: {}\nTreshold: {}\nThresholded volume: {}'.format(
+            self.ds1.Name, globals.versus[0],
+            denstensor.getTresholdedVolumeMeasure(self.T1, globals.versus[0]))
+        plt.figtext(.2, .3, title, size=20, ha='center')    
+        
+        title = 'Light: {}\nTreshold: {}\nThresholded volume: {}'.format(
+            self.ds2.Name, globals.versus[1],
+            denstensor.getTresholdedVolumeMeasure(self.T2, globals.versus[1]))
+        plt.figtext(.8, .3, title, size=20, ha='center')
+        
         ax = plt.subplot(235)
         title = '{} treshold:{}\n{} treshold:{}\nThresholded volume: {}'.format(
-            self.ds1.name, globals.versus[0],
-            self.ds2.name, globals.versus[1],
+            self.ds1.Name, globals.versus[0],
+            self.ds2.Name, globals.versus[1],
             denstensor.getTresholdedVolumeMeasure((ISTensor==1)*2, 1))
         ax.set_title(title)
         ax.imshow(
@@ -104,8 +114,8 @@ class VersusTensorPlot:
 
         OUT_NAME = '{}/{}-VS-{}-treshold-{}-{}.png'.format(
             output_dir,
-            self.ds1.name,
-            self.ds2.name,
+            self.ds1.Name,
+            self.ds2.Name,
             globals.versus[0],
             globals.versus[1])
 
