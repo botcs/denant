@@ -24,56 +24,78 @@ class VersusTensorPlot:
     def __init__(self, dataset1, dataset2):
         self.ds1 = dataset1
         self.ds2 = dataset2
-        self.T1 = np.mean(self.ds1.D, axis=2)
-        self.T2 = np.mean(self.ds2.D, axis=2)
+        #self.T1 = np.mean(self.ds1.D, axis=2)
+        #self.T2 = np.mean(self.ds2.D, axis=2)
+        self.T1 = self.ds1.D
+        self.T2 = self.ds2.D
 
     def getFigure(self):
+
         axX = globals.axes[0]
         axY = globals.axes[1]
-        corners = [axX[0], axX[-1], axY[-1], axY[0]]
+        axZ = globals.axes[2]
+        
+        cornersX = [axY[0], axY[-1], axZ[-1], axZ[0]]
+        cornersY = [axX[0], axX[-1], axZ[-1], axZ[0]]        
+        cornersZ = [axX[0], axX[-1], axY[-1], axY[0]]
 
         plt.close()
-        fig = plt.gcf()
-        fig.suptitle(
-            self.ds1.IN_FILE + ' VERSUS ' + self.ds2.IN_FILE,
-            fontsize=14, fontweight='bold')
-
-        intersectionMap = plt.subplot(121)
-        intersectionMap.set_title(
-            'White: intersection\nRed: {}\nGreen: {}'.format(
-                self.ds1.name, self.ds2.name))
+        fig = plt.figure(figsize=(16, 9))
+        
+    
         ISTensor = np.zeros(self.T1.shape, dtype=int)
         '''TURNING BOOLEAN ARRAY TO INT ARRAY'''
-        ISTensor = ISTensor + 1 * (self.T1 > globals.versus[0])
-        ISTensor = ISTensor + 2 * (self.T2 > globals.versus[1])
-
-        cmap = colors.ListedColormap(['black', 'red', 'green', 'white'])
-        bounds = [0, 1, 2, 3, 4]
-        norm = colors.BoundaryNorm(bounds, cmap.N)
-
+        ISTensor += -100 * (self.T1 > globals.versus[0])
+        ISTensor += 101 * (self.T2 > globals.versus[1])
+        
+        intersectionMap = plt.subplot(231)
+        intersectionMap.set_title('X projection')
         intersectionMap.imshow(
-            ISTensor,
-            cmap=cmap,
-            norm=norm,
+            ISTensor.sum(axis=0),
+            cmap=plt.cm.gray,
             interpolation='None',
-            aspect=1, extent=corners)
+            #aspect=1, 
+            extent=cornersX)
         intersectionMap.locator_params(nbins=4)
 
-        ax = plt.subplot(122)
+
+        intersectionMap = plt.subplot(232)
+        intersectionMap.set_title('Y projection')
+        intersectionMap.imshow(
+            ISTensor.sum(axis=1),
+            cmap=plt.cm.gray,
+            interpolation='None',
+            #aspect=1, 
+            extent=cornersY)
+        intersectionMap.locator_params(nbins=4)
+
+
+        intersectionMap = plt.subplot(233)
+        intersectionMap.set_title('Z projection')
+        intersectionMap.imshow(
+            ISTensor.sum(axis=2),
+            cmap=plt.cm.gray,
+            interpolation='None',
+            #aspect=1, 
+            extent=cornersZ)
+        intersectionMap.locator_params(nbins=4)
+
+
+        ax = plt.subplot(235)
         title = '{} treshold:{}\n{} treshold:{}\nThresholded volume: {}'.format(
             self.ds1.name, globals.versus[0],
             self.ds2.name, globals.versus[1],
-            denstensor.getTresholdedVolumeMeasure(ISTensor, 2))
+            denstensor.getTresholdedVolumeMeasure((ISTensor==1)*2, 1))
         ax.set_title(title)
         ax.imshow(
-            ISTensor > 2,
+            ((ISTensor==1)*1).sum(axis=2),
             cmap=plt.cm.gray,
-            aspect=1,
+#            aspect=1,
             interpolation='None',
-            extent=corners)
+            extent=cornersZ)
+            
         ax.locator_params(nbins=4)
 
-        fig.set_size_inches(10, 6)
         plt.tight_layout()
 
         return fig
@@ -83,7 +105,7 @@ class VersusTensorPlot:
         OUT_NAME = '{}/{}-VS-{}-treshold-{}-{}.png'.format(
             output_dir,
             self.ds1.name,
-            self.ds1.name,
+            self.ds2.name,
             globals.versus[0],
             globals.versus[1])
 
@@ -184,7 +206,7 @@ class SingleTensorPlot:
 
         plt.close()
         fig = plt.gcf()
-        fig.suptitle(self.ds.IN_FILE, fontsize=14, fontweight='bold')
+        fig.suptitle(self.ds.name, fontsize=14, fontweight='bold')
 
         mainMap = plt.subplot2grid(
             gridShape, (0, colnum / 2))

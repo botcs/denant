@@ -46,7 +46,8 @@ def main():
 
     step += 1
     globals.printHeader('  Saving figures ({}/2)'.format(step))
-    print(' Removed sets due to coarse error:')
+    if len(empty_sets) > 0:
+        print(' Removed sets due to coarse error:')
     for e in empty_sets:
         print e.name
     globals.ensure_dir(globals.output)

@@ -102,7 +102,7 @@ class PointSet:
             bounds[1][1] - bounds[1][0],
             bounds[2][1] - bounds[2][0]
         )
-
+        self.intervals = intervals
         DELTA = min(intervals) / float(globals.res)
         globals.DELTA = DELTA
         globals.axes = (
@@ -112,16 +112,17 @@ class PointSet:
         )
 
         vprint("\n  Space expanded with new parametres:")
-        PointSet.printBounds()
+        self.printBounds()
 
         return True
 
     # STATUS MONITORING ###
-    @classmethod
-    def printBounds(cls):
+    def printBounds(self):
+        vprint("axis [start, end, distance, resolution]:")
         for i, W in enumerate('XYZ'):
-            vprint("{} axis [start, end, length]:\n\t{}\t{}\t{}\t".format(
-                W, globals.axes[i][0], globals.axes[i][-1], len(globals.axes[i])))
+            vprint("{} \t{} \t{} \t{} \t{}".format(W,
+                globals.axes[i][0], globals.axes[i][-1], 
+                self.intervals[i], len(globals.axes[i])))
 
     def printOpts(self):
         print('\tOptions for this set:\t')
