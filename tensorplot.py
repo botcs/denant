@@ -80,22 +80,21 @@ class VersusTensorPlot:
             extent=cornersZ)
         intersectionMap.locator_params(nbins=4)
 
-        
+        V1 = denstensor.getTresholdedVolumeMeasure(self.T1, globals.versus[0])
         title = 'Dark: {}\nTreshold: {}\nThresholded volume: {}'.format(
             self.ds1.Name, globals.versus[0],
-            denstensor.getTresholdedVolumeMeasure(self.T1, globals.versus[0]))
+            V1)
         plt.figtext(.2, .3, title, size=20, ha='center')    
         
+        V2 = denstensor.getTresholdedVolumeMeasure(self.T2, globals.versus[1])
         title = 'Light: {}\nTreshold: {}\nThresholded volume: {}'.format(
             self.ds2.Name, globals.versus[1],
-            denstensor.getTresholdedVolumeMeasure(self.T2, globals.versus[1]))
+            V2)
         plt.figtext(.8, .3, title, size=20, ha='center')
         
+        VIS = denstensor.getTresholdedVolumeMeasure((ISTensor==1)*2, 1)
         ax = plt.subplot(235)
-        title = '{} treshold:{}\n{} treshold:{}\nThresholded volume: {}'.format(
-            self.ds1.Name, globals.versus[0],
-            self.ds2.Name, globals.versus[1],
-            denstensor.getTresholdedVolumeMeasure((ISTensor==1)*2, 1))
+        title = 'Tresholded volume: {}\nCompared to Dark volume: {}%\nCompared to Light volume: {}%'.format(VIS, int(VIS/V1*10000)/100.0, int(VIS/V2*10000)/100.0)
         ax.set_title(title)
         ax.imshow(
             ((ISTensor==1)*1).sum(axis=2),

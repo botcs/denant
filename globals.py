@@ -14,7 +14,7 @@ versus = None
 inputs = []
 binn = [3]
 rad = [3000]
-res = 50
+res = 200
 output = 'default_output'
 
 
